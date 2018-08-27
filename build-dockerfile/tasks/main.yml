@@ -1,0 +1,15 @@
+---
+
+- name: show Dockerfile content
+  debug:
+    msg: "{{ lookup('template', 'Dockerfile.j2') }}"
+    verbosity: 2
+
+- set_fact:
+    dockerfile_content: "{{ lookup('template', 'Dockerfile.j2') }}"
+
+- name: output Dockerfile is output file specified
+  copy:
+    content: "{{dockerfile_content}}"
+    dest: "{{dockerfile_output_file}}"
+  when: 'dockerfile_output_file is defined'

@@ -1,0 +1,16 @@
+---
+
+- hosts: localhost
+  roles:
+  - role: build-dockerfile
+    dockerfile_output_file: Dockerfile_Ansible
+  post_tasks:
+  - debug: var=dockerfile_content
+  - name: Build image and with buildargs
+    docker_image:
+       path: "{{playbook_dir}}"
+       name: centos-sshd-ansible
+       dockerfile: Dockerfile_Ansible
+       rm: yes
+       nocache: no
+       state: present

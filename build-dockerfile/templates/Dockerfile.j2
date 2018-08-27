@@ -1,0 +1,22 @@
+FROM {{dockerfile_base_img}}
+RUN {{dockerfile_systemd_setup}}
+{% for p in dockerfile_sshd_setup %}
+RUN {{p}}
+{% endfor %}
+#setup for user ssh access
+RUN useradd {{dockerfile_sshd_username}}
+RUN echo -e "{{dockerfile_sshd_password}}\n{{dockerfile_sshd_password}}" | passwd --stdin {{dockerfile_sshd_username}}
+RUN echo "dockerfile_sshd_username ALL=(ALL:ALL) NOPASSWD: ALL" | (EDITOR="tee -a" visudo)
+#setup SSH key access
+RUN mkdir /home/{{dockerfile_sshd_username}}/.ssh
+RUN chmod 700 /home/{{dockerfile_sshd_username}}/.ssh
+ADD ssh/id_rsa.pub /home/{{dockerfile_sshd_username}}/.ssh/authorized_keys
+RUN chmod 600 /home/{{dockerfile_sshd_username}}/.ssh/authorized_keys
+RUN chown -R ansible /home/{{dockerfile_sshd_username}}/.ssh
+RUN mkdir /var/run/sshd
+RUN ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key -N ''
+RUN sed -ri 's/UsePAM yes/#UsePAM yes/g' /etc/ssh/sshd_config && \
+    sed -ri 's/#UsePAM no/UsePAM no/g' /etc/ssh/sshd_config
+VOLUME [ "/sys/fs/cgroup" ]
+EXPOSE 22
+CMD ["/usr/sbin/init"]
